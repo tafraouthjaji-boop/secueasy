@@ -144,7 +144,7 @@ draft.no=++S.seq[draft.type];if(draft.type==='facture')applyStock(draft,1);S.doc
 function toInv(id){const q=S.docs.find(d=>d.id===id);const f={...JSON.parse(JSON.stringify(q)),id:uid(),type:'facture',date:today(),paid:false,from:q.no,no:++S.seq.facture};
 delete f.converted;applyStock(f,1);q.converted=true;S.docs.push(f);save();view=f.id;render()}
 function pay(id){const d=S.docs.find(x=>x.id===id);d.paid=!d.paid;save();render()}
-function sheet(d){const c=S.clients.find(x=>x.id===d.client)||{};const T=totals(d);const nm=d.type==='devis'?'عرض ثمن':'فاتورة';const fr=d.type==='devis'?'DEVIS':'FACTURE';
+function sheet(d){const c=S.clients.find(x=>x.id===d.client)||{};const T=totals(d);const nm=d.type==='devis'?'عرض ثمن':'فاتورة التوصيل';const fr=d.type==='devis'?'DEVIS':'FACTURE';
 return `<div class="row noprint"></div><div class="card noprint"><h2>🖨️ الطابعة</h2><div class="row"><select id="paper" onchange="setPaper(this.value)"><option value="a4" ${paper()==='a4'?'selected':''}>HP LaserJet Pro 4002dn، ورق A4</option><option value="80" ${paper()==='80'?'selected':''}>Epson، وصل 80 مم</option><option value="58" ${paper()==='58'?'selected':''}>Epson، وصل 58 مم</option></select></div><small style="color:#666">الاختيار يُحفظ تلقائياً. اختر نفس الطابعة في نافذة الطباعة.</small></div><div class="row noprint"><button class="btn" onclick="doPrint()">طباعة / حفظ PDF</button><button class="btn g" onclick="go('docs')">رجوع</button></div>
 <div class="sheet"><div class="top"><div><div class="nm">Secueasy</div><small>Sécurité et solutions informatiques</small><div style="font-weight:700;margin-top:2px">الهاتف: <bdi dir="ltr">0666549952</bdi></div></div><div style="text-align:left"><h1>${nm}</h1><div dir="ltr" style="font-weight:700">${fr} N° ${d.no}</div><div style="white-space:nowrap">التاريخ: <bdi dir="ltr">${dfmt(d.date)}</bdi></div></div></div>
 <div class="cbox"><b>الزبون:</b> ${esc(c.name||'-')}<br>${esc(c.addr||'')} ${c.ice?' — ICE: '+esc(c.ice):''} ${c.phone?'<br>'+esc(c.phone):''}</div>
@@ -166,4 +166,130 @@ let st=document.getElementById('pg');if(!st){st=document.createElement('style');
 st.textContent=p==='a4'?'@page{size:A4;margin:12mm}':'@page{size:'+p+'mm 200mm;margin:2mm}'}
 function doPrint(){applyPaper();window.print()}
 applyPaper();
-</script></body></html>
+</script><script>
+(function(){
+const D={
+'تسيير المحل':['Gestion du magasin','Shop management'],
+'الملخص':['Résumé','Summary'],
+'المنتجات والمخزون':['Produits et stock','Products & stock'],
+'الزبائن':['Clients','Customers'],
+'عروض الثمن والفواتير':['Devis et factures','Quotes & invoices'],
+'نسخة احتياطية':['Sauvegarde','Backup'],
+'مبيعات هذا الشهر':['Ventes du mois','Sales this month'],
+'د.م':['DH','MAD'],
+'إجمالي الفواتير':['Total des factures','Total invoices'],
+'غير مدفوع':['Impayé','Unpaid'],
+'مدفوعة':['Payée','Paid'],
+'مدفوع':['Payé','Paid'],
+'غير مدفوعة':['Impayée','Unpaid'],
+'قيمة المخزون (سعر الشراء)':['Valeur du stock (prix d\'achat)','Stock value (cost price)'],
+'عروض ثمن مفتوحة':['Devis ouverts','Open quotes'],
+'مخزون منخفض':['Stock faible','Low stock'],
+'الحد الأدنى':['Minimum','Minimum'],
+'لا شيء. المخزون جيد.':['Rien. Le stock est bon.','None. Stock is fine.'],
+'الأكثر مبيعاً':['Meilleures ventes','Top sellers'],
+'لا توجد فواتير بعد.':['Aucune facture pour le moment.','No invoices yet.'],
+'ابدأ بإضافة منتجات وزبائن، ثم أنشئ أول عرض ثمن.':['Commencez par ajouter des produits et des clients, puis créez votre premier devis.','Start by adding products and customers, then create your first quote.'],
+'تعديل منتج':['Modifier le produit','Edit product'],
+'إضافة منتج':['Ajouter un produit','Add product'],
+'الاسم':['Nom','Name'],
+'سعر البيع':['Prix de vente','Selling price'],
+'سعر الشراء':['Prix d\'achat','Cost price'],
+'الكمية في المخزون':['Quantité en stock','Quantity in stock'],
+'حفظ':['Enregistrer','Save'],
+'المنتج':['Produit','Product'],
+'البيع':['Vente','Sale'],
+'الشراء':['Achat','Cost'],
+'المخزون':['Stock','Stock'],
+'تعديل':['Modifier','Edit'],
+'حذف':['Supprimer','Delete'],
+'لا توجد منتجات.':['Aucun produit.','No products.'],
+'أدخل الاسم':['Saisissez le nom','Enter the name'],
+'تأكيد الحذف؟':['Confirmer la suppression ?','Confirm deletion?'],
+'تعديل زبون':['Modifier le client','Edit customer'],
+'إضافة زبون':['Ajouter un client','Add customer'],
+'الهاتف:':['Tél :','Phone:'],
+'الهاتف':['Téléphone','Phone'],
+'العنوان':['Adresse','Address'],
+'لا يوجد زبائن.':['Aucun client.','No customers.'],
+'عرض ثمن جديد':['Nouveau devis','New quote'],
+'+ عرض ثمن جديد':['+ Nouveau devis','+ New quote'],
+'فاتورة جديدة':['Nouvelle facture','New invoice'],
+'النوع':['Type','Type'],
+'الرقم':['N°','No.'],
+'التاريخ:':['Date :','Date:'],
+'التاريخ':['Date','Date'],
+'الزبون:':['Client :','Customer:'],
+'الزبون':['Client','Customer'],
+'الحالة':['Statut','Status'],
+'عرض ثمن':['Devis','Quote'],
+'فاتورة التوصيل':['Facture de livraison','Delivery invoice'],
+'فاتورة':['Facture','Invoice'],
+'حُوّل لفاتورة':['Converti en facture','Converted to invoice'],
+'مفتوح':['Ouvert','Open'],
+'عرض / PDF':['Voir / PDF','View / PDF'],
+'إلى فاتورة':['En facture','To invoice'],
+'إلغاء الدفع':['Annuler le paiement','Unmark paid'],
+'تم الدفع':['Marquer payée','Mark paid'],
+'لا توجد وثائق.':['Aucun document.','No documents.'],
+'اختر الزبون':['Choisissez le client','Select the customer'],
+'اختر':['Choisir','Select'],
+'إضافة من المنتجات':['Ajouter depuis les produits','Add from products'],
+'إضافة':['Ajouter','Add'],
+'سطر حر':['Ligne libre','Free line'],
+'البيان':['Désignation','Description'],
+'العدد':['Qté','Qty'],
+'ثمن الوحدة':['Prix unitaire','Unit price'],
+'الثمن':['Prix','Price'],
+'المجموع':['Total','Total'],
+'ملاحظة':['Remarque','Note'],
+'إلغاء':['Annuler','Cancel'],
+'أضف سطراً واحداً على الأقل':['Ajoutez au moins une ligne','Add at least one line'],
+'الطابعة':['Imprimante','Printer'],
+'، ورق':[', papier',', paper'],
+'، وصل 80 مم':[', ticket 80 mm',', receipt 80 mm'],
+'، وصل 58 مم':[', ticket 58 mm',', receipt 58 mm'],
+'الاختيار يُحفظ تلقائياً. اختر نفس الطابعة في نافذة الطباعة.':['Le choix est enregistré automatiquement. Choisissez la même imprimante dans la fenêtre d\'impression.','Your choice is saved automatically. Pick the same printer in the print dialog.'],
+'طباعة / حفظ':['Imprimer / Enregistrer','Print / Save'],
+'رجوع':['Retour','Back'],
+'أوقفت هذه الفاتورة عند مبلغ:':['Arrêtée la présente facture à la somme de :','This invoice is for the amount of:'],
+'أوقفت هذه العرض عند مبلغ:':['Arrêté le présent devis à la somme de :','This quote is for the amount of:'],
+'درهماً':['dirhams','dirhams'],
+'الختم والتوقيع':['Cachet et signature','Stamp and signature'],
+'صالح 30 يوماً':['Valable 30 jours','Valid for 30 days'],
+'البيانات محفوظة في متصفح هذا الجهاز فقط. احفظ نسخة بانتظام.':['Les données sont enregistrées uniquement dans le navigateur de cet appareil. Faites une sauvegarde régulièrement.','Data is stored only in this device\'s browser. Back it up regularly.'],
+'تصدير النسخة':['Exporter la sauvegarde','Export backup'],
+'استيراد نسخة (نص JSON)':['Importer une sauvegarde (texte JSON)','Import a backup (JSON text)'],
+'استيراد':['Importer','Import'],
+'سيتم استبدال البيانات الحالية. متابعة؟':['Les données actuelles seront remplacées. Continuer ?','Current data will be replaced. Continue?'],
+'نص غير صالح':['Texte invalide','Invalid text']
+};
+const keys=Object.keys(D).sort((a,b)=>b.length-a.length);
+const L=()=>localStorage.getItem('sx_lang')||'ar';
+const idx=l=>l==='fr'?0:1;
+window.tr=function(s){const l=L();if(l==='ar'||typeof s!=='string')return s;for(const k of keys){if(s.includes(k))s=s.split(k).join(D[k][idx(l)])}return s};
+const oa=window.alert.bind(window),oc=window.confirm.bind(window);
+window.alert=m=>oa(tr(m));window.confirm=m=>oc(tr(m));
+const ow=window.words;window.words=function(n){return L()==='ar'?ow(n):fmt(Math.floor(n))};
+function walk(){const l=L();const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+const a=[];while(w.nextNode())a.push(w.currentNode);a.forEach(n=>{const v=tr(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v});}
+function apply(){const l=L();const h=document.documentElement;h.lang=l;h.dir=l==='ar'?'rtl':'ltr';
+const hd=document.querySelector('header>span');if(hd&&!hd.dataset.o)hd.dataset.o=hd.textContent;if(hd)hd.textContent=tr(hd.dataset.o);
+const s=document.getElementById('lang');if(s)s.value=l;
+if(l!=='ar')walk();}
+window.setLang=function(v){localStorage.setItem('sx_lang',v);render()};
+const or=window.render;window.render=function(){or();apply()};
+window.addEventListener('DOMContentLoaded',()=>{});
+const hdr=document.querySelector('header');
+hdr.insertAdjacentHTML('beforeend','<select id="lang" onchange="setLang(this.value)" style="margin-inline-start:auto;width:auto;padding:5px 8px;font-size:14px"><option value="ar">العربية</option><option value="fr">Français</option><option value="en">English</option></select>');
+render();
+})();
+</script>
+<style>
+html[dir=ltr] th{text-align:left}
+html[dir=ltr] .cbox{border-right:0;border-left:4px solid var(--red)}
+html[dir=ltr] .tot{margin-right:0;margin-left:auto}
+html[dir=ltr] .sheet .top>div:last-child{text-align:right!important}
+html[dir=ltr] body.p80 .sheet .top>div:last-child,html[dir=ltr] body.p58 .sheet .top>div:last-child{text-align:center!important}
+</style>
+</body></html>
