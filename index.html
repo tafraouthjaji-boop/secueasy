@@ -96,7 +96,7 @@ return `<div class="grid"><div class="kpi"><small>مبيعات هذا الشهر
 ${S.products.length+S.clients.length+S.docs.length?'':'<div class="card">ابدأ بإضافة منتجات وزبائن، ثم أنشئ أول عرض ثمن.</div>'}`}
 function products(){
 const e=edit&&edit.k==='p'?edit.v:null;
-return `<div class="card"><h2>${e&&e.id?'تعديل منتج':'إضافة منتج'}</h2><div class="row"><div><label>الاسم</label><input id="pn" value="${esc(e?.name)}"></div>
+return `<div class="card"><h2>${e&&e.id?'تعديل منتج':'إضافة منتج'}</h2><button class="btn k" id="mic" type="button" onclick="voiceP()" style="width:100%;margin-bottom:4px">🎤 قل اسم المنتج وثمنه</button><small id="vh" style="display:block;margin-bottom:8px"></small><div class="row"><div><label>الاسم</label><input id="pn" value="${esc(e?.name)}"></div>
 <div><label>سعر البيع (HT)</label><input id="pp" type="number" value="${e?.price??''}"></div><div><label>سعر الشراء</label><input id="pc" type="number" value="${e?.cost??''}"></div>
 <div><label>الكمية في المخزون</label><input id="ps" type="number" value="${e?.stock??''}"></div><div><label>الحد الأدنى</label><input id="pm" type="number" value="${e?.min??2}"></div>
 <button class="btn" onclick="saveP('${e?.id||''}')">حفظ</button></div></div>
@@ -169,6 +169,12 @@ applyPaper();
 </script><script>
 (function(){
 const D={
+'🎤 قل اسم المنتج وثمنه':['🎤 Dites le nom et le prix','🎤 Say the product name and price'],
+'🎤 أستمع... تكلم الآن':['🎤 J\'écoute... parlez','🎤 Listening... speak now'],
+'سمعت:':['J\'ai entendu :','Heard:'],
+'تحقق من الاسم والسعر ثم اضغط حفظ':['Vérifiez le nom et le prix puis appuyez sur Enregistrer','Check the name and price, then press Save'],
+'لم أفهم السعر، اكتبه':['Prix non compris, saisissez-le','Price not understood, type it'],
+'الميكروفون غير متاح. استعمل Chrome وأعطِ الإذن للميكروفون.':['Micro indisponible. Utilisez Chrome et autorisez le micro.','Microphone unavailable. Use Chrome and allow the microphone.'],
 'تسيير المحل':['Gestion du magasin','Shop management'],
 'الملخص':['Résumé','Summary'],
 'المنتجات والمخزون':['Produits et stock','Products & stock'],
@@ -284,6 +290,33 @@ const hdr=document.querySelector('header');
 hdr.insertAdjacentHTML('beforeend','<select id="lang" onchange="setLang(this.value)" style="margin-inline-start:auto;width:auto;padding:5px 8px;font-size:14px"><option value="ar">العربية</option><option value="fr">Français</option><option value="en">English</option></select>');
 render();
 })();
+</script>
+<script>
+function parseVoice(text){
+  var t=text.replace(/[\u0660-\u0669]/g,function(c){return c.charCodeAt(0)-1632}).replace(/[\u06F0-\u06F9]/g,function(c){return c.charCodeAt(0)-1776});
+  var m=t.match(/\d{1,3}(?:[\s.,]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d+)?/g),price="",name=t;
+  if(m){var last=m[m.length-1];name=t.replace(last,"");price=last.replace(/[\s.,](?=\d{3}(\D|$))/g,"").replace(",",".")}
+  name=name.replace(/دراهم|درهم|dirhams?|\bdh\b|\bmad\b/gi," ").replace(/\s+/g," ").trim();
+  return {name:name,price:price};
+}
+var _rec=null;
+function voiceP(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition,l=localStorage.getItem('sx_lang')||'ar',T=function(x){return window.tr?tr(x):x};
+  var mic=document.getElementById('mic'),vh=document.getElementById('vh');
+  if(!SR){alert('الميكروفون غير متاح. استعمل Chrome وأعطِ الإذن للميكروفون.');return}
+  if(_rec){_rec.stop();return}
+  var r=new SR();_rec=r;r.lang={ar:'ar-MA',fr:'fr-FR',en:'en-US'}[l];r.interimResults=false;r.maxAlternatives=1;
+  mic.textContent=T('🎤 أستمع... تكلم الآن');
+  r.onresult=function(e){
+    var txt=e.results[0][0].transcript,p=parseVoice(txt);
+    if(p.name)document.getElementById('pn').value=p.name;
+    if(p.price)document.getElementById('pp').value=p.price;
+    vh.textContent=T('سمعت:')+' '+txt+' — '+T(p.price?'تحقق من الاسم والسعر ثم اضغط حفظ':'لم أفهم السعر، اكتبه');
+  };
+  r.onerror=function(e){vh.textContent=(e.error==='not-allowed'?T('الميكروفون غير متاح. استعمل Chrome وأعطِ الإذن للميكروفون.'):'\u26a0 '+e.error)};
+  r.onend=function(){_rec=null;mic.textContent=T('🎤 قل اسم المنتج وثمنه')};
+  r.start();
+}
 </script>
 <style>
 html[dir=ltr] th{text-align:left}
