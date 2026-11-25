@@ -32,6 +32,18 @@ td{padding:8px;border-bottom:1px solid var(--line);font-size:14px;vertical-align
 .tot .t{background:var(--red);color:#fff;font-weight:800;font-size:18px;border-radius:6px}
 .sig{display:flex;justify-content:space-between;margin-top:40px;color:#555}
 .hide{display:none}
+
+body.p80 .sheet,body.p58 .sheet{margin:0 auto;padding:4px;font-size:12px;border:0}
+body.p80 .sheet{width:72mm;max-width:72mm}body.p58 .sheet{width:48mm;max-width:48mm;font-size:11px}
+body.p80 .sheet .top,body.p58 .sheet .top{display:block;text-align:center;padding-bottom:6px;border-bottom:2px dashed #000}
+body.p80 .sheet .top>div,body.p58 .sheet .top>div{text-align:center!important}
+body.p80 .sheet h1,body.p58 .sheet h1{font-size:16px}body.p80 .sheet .nm,body.p58 .sheet .nm{font-size:18px}
+body.p80 .cbox,body.p58 .cbox{margin:6px 0;padding:4px;background:#fff;border:0;border-bottom:1px dashed #000;border-radius:0}
+body.p80 .sheet th,body.p58 .sheet th{background:#fff;color:#000;border-bottom:1px solid #000;padding:2px;font-size:11px}
+body.p80 .sheet td,body.p58 .sheet td{padding:2px;font-size:11px}
+body.p80 .tot,body.p58 .tot{width:100%;margin:6px 0 0}body.p80 .tot .t,body.p58 .tot .t{background:#fff;color:#000;border:1px solid #000;border-radius:0}
+body.p80 .sig,body.p58 .sig{margin-top:14px;font-size:11px}
+body.p80 .sheet,body.p58 .sheet,body.p80 .sheet *,body.p58 .sheet *{color:#000}
 @media print{header,nav,.noprint{display:none!important}body{background:#fff}main{padding:0;max-width:none}.sheet{border:0;padding:0}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body>
 <header><b>Secue<span>asy</span></b><span>تسيير المحل</span></header>
@@ -133,7 +145,7 @@ function toInv(id){const q=S.docs.find(d=>d.id===id);const f={...JSON.parse(JSON
 delete f.converted;applyStock(f,1);q.converted=true;S.docs.push(f);save();view=f.id;render()}
 function pay(id){const d=S.docs.find(x=>x.id===id);d.paid=!d.paid;save();render()}
 function sheet(d){const c=S.clients.find(x=>x.id===d.client)||{};const T=totals(d);const nm=d.type==='devis'?'عرض ثمن':'فاتورة';const fr=d.type==='devis'?'DEVIS':'FACTURE';
-return `<div class="row noprint"><button class="btn" onclick="window.print()">طباعة / حفظ PDF</button><button class="btn g" onclick="go('docs')">رجوع</button></div>
+return `<div class="row noprint"></div><div class="card noprint"><h2>🖨️ الطابعة</h2><div class="row"><select id="paper" onchange="setPaper(this.value)"><option value="a4" ${paper()==='a4'?'selected':''}>HP LaserJet Pro 4002dn، ورق A4</option><option value="80" ${paper()==='80'?'selected':''}>Epson، وصل 80 مم</option><option value="58" ${paper()==='58'?'selected':''}>Epson، وصل 58 مم</option></select></div><small style="color:#666">الاختيار يُحفظ تلقائياً. اختر نفس الطابعة في نافذة الطباعة.</small></div><div class="row noprint"><button class="btn" onclick="doPrint()">طباعة / حفظ PDF</button><button class="btn g" onclick="go('docs')">رجوع</button></div>
 <div class="sheet"><div class="top"><div><div class="nm">Secueasy</div><small>Sécurité et solutions informatiques</small></div><div style="text-align:left"><h1>${nm}</h1><div dir="ltr" style="font-weight:700">${fr} N° ${d.no}</div><div style="white-space:nowrap">التاريخ: <bdi dir="ltr">${dfmt(d.date)}</bdi></div></div></div>
 <div class="cbox"><b>الزبون:</b> ${esc(c.name||'-')}<br>${esc(c.addr||'')} ${c.ice?' — ICE: '+esc(c.ice):''} ${c.phone?'<br>'+esc(c.phone):''}</div>
 <table><tr><th>البيان</th><th>العدد</th><th>ثمن الوحدة</th><th>المجموع</th></tr>${d.lines.map(l=>`<tr><td>${esc(l.name)}</td><td>${l.qty}</td><td>${fmt(l.price)}</td><td>${fmt(l.qty*l.price)}</td></tr>`).join('')}</table>
@@ -146,4 +158,12 @@ function backup(){return `<div class="card"><h2>نسخة احتياطية</h2><p
 function exp(){const b=new Blob([JSON.stringify(S)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='secueasy-backup-'+today()+'.json';a.click()}
 function imp(){try{const x=JSON.parse($('#bk').value);if(!x.products||!x.docs)throw 0;if(confirm('سيتم استبدال البيانات الحالية. متابعة؟')){S=x;save();go('home')}}catch(e){alert('نص غير صالح')}}
 render();
-</script><script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script></body></html>
+</script><script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script><script>
+function paper(){return localStorage.getItem('sx_paper')||'a4'}
+function setPaper(v){localStorage.setItem('sx_paper',v);applyPaper()}
+function applyPaper(){const p=paper();document.body.classList.remove('p80','p58');if(p!=='a4')document.body.classList.add('p'+p);
+let st=document.getElementById('pg');if(!st){st=document.createElement('style');st.id='pg';document.head.appendChild(st)}
+st.textContent=p==='a4'?'@page{size:A4;margin:12mm}':'@page{size:'+p+'mm 200mm;margin:2mm}'}
+function doPrint(){applyPaper();window.print()}
+applyPaper();
+</script></body></html>
