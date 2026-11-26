@@ -60,6 +60,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 const dfmt=d=>d.split('-').reverse().join('/');
 let tab='home',view=null,draft=null,edit=null;
 const tabs=[['home','الملخص'],['products','المنتجات والمخزون'],['clients','الزبائن'],['docs','عروض الثمن والفواتير'],['recv','استلام سلعة'],['stats','إحصائيات'],['backup','نسخة احتياطية']];
+window.ivType=localStorage.getItem('sx_ivt')||'facture';
 const isSale=d=>d.type==='facture'||d.type==='bon';
 function totals(d){const ht=d.lines.reduce((a,l)=>a+l.qty*l.price,0);const tva=d.type==='bon'?0:ht*(d.tva/100);return{ht,tva,ttc:ht+tva}}
 // number to Arabic words
@@ -121,7 +122,7 @@ const o={name:n,phone:$('#ct').value,addr:$('#ca').value,ice:$('#ci').value};
 if(id)Object.assign(S.clients.find(p=>p.id===id),o);else S.clients.push({id:uid(),...o});save();edit=null;render()}
 function docs(){
 const L=S.docs.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.no-a.no);
-return `<div class="card"><h2>من بون مكتوب بخط اليد</h2><div class="row"><div><label>الناتج</label><select onchange="window.ivType=this.value"><option value="facture" ${window.ivType!=='bon'?'selected':''}>فاتورة</option><option value="bon" ${window.ivType==='bon'?'selected':''}>بون (بدون TVA)</option></select></div></div><input id="ivf" type="file" accept="image/*" capture="environment" style="display:none" onchange="ivRead(this)"><input id="ivg" type="file" accept="image/*" style="display:none" onchange="ivRead(this)"><div class="row"><button class="btn k" onclick="document.getElementById('ivf').click()">📷 صوّر بون وحوله لفاتورة</button><button class="btn k" onclick="document.getElementById('ivg').click()">🖼️ اختر صورة من المعرض</button></div><small>${esc(ivMsg)}</small></div><div class="row"><button class="btn" onclick="newDoc('devis')">+ عرض ثمن جديد</button><button class="btn k" onclick="newDoc('facture')">+ فاتورة جديدة</button> <button class="btn k" onclick="newDoc('bon')">+ بون جديد</button></div>
+return `<div class="card"><h2>من بون مكتوب بخط اليد</h2><div class="row"><div><label>الناتج</label><select style="font-weight:700;border:2px solid var(--red)" onchange="window.ivType=this.value;localStorage.setItem('sx_ivt',this.value)"><option value="facture" ${window.ivType!=='bon'?'selected':''}>فاتورة</option><option value="bon" ${window.ivType==='bon'?'selected':''}>بون (بدون TVA)</option></select></div></div><input id="ivf" type="file" accept="image/*" capture="environment" style="display:none" onchange="ivRead(this)"><input id="ivg" type="file" accept="image/*" style="display:none" onchange="ivRead(this)"><div class="row"><button class="btn k" onclick="document.getElementById('ivf').click()">📷 صوّر بون وحوله لفاتورة</button><button class="btn k" onclick="document.getElementById('ivg').click()">🖼️ اختر صورة من المعرض</button></div><small>${esc(ivMsg)}</small></div><div class="row"><button class="btn" onclick="newDoc('devis')">+ عرض ثمن جديد</button><button class="btn k" onclick="newDoc('facture')">+ فاتورة جديدة</button> <button class="btn k" onclick="newDoc('bon')">+ بون جديد</button></div>
 <div class="card tw"><table><tr><th>النوع</th><th>الرقم</th><th>التاريخ</th><th>الزبون</th><th>TTC</th><th>الحالة</th><th></th></tr>
 ${L.map(d=>{const c=S.clients.find(x=>x.id===d.client);return `<tr><td>${d.type==='devis'?'عرض ثمن':d.type==='bon'?'بون':'فاتورة'}</td><td>${d.no}</td><td>${dfmt(d.date)}</td><td>${esc(c?.name||'-')}</td><td>${fmt(totals(d).ttc)}</td>
 <td>${isSale(d)?(d.paid?'<span class="tag d">مدفوعة</span>':'<span class="tag r">غير مدفوعة</span>'):(d.converted?'<span class="tag d">حُوّل لفاتورة</span>':'<span class="tag">مفتوح</span>')}</td>
@@ -320,7 +321,7 @@ const D={
 'عرض ثمن':['Devis','Quote'],
 'فاتورة التوصيل':['Facture de livraison','Delivery invoice'],
 'فاتورة':['Facture','Invoice'],
-'بون':['Bon','Delivery note'],'بون التوصيل':['Bon de livraison','Delivery note'],'بون جديد':['Nouveau bon','New delivery note'],'+ بون جديد':['+ Nouveau bon','+ New delivery note'],'أوقفت هذا البون عند مبلغ:':['Arrêté le présent bon à la somme de :','This delivery note is for the amount of:'],'الناتج':['Résultat','Output'],'بون (بدون TVA)':['Bon (sans TVA)','Delivery note (no VAT)'],
+'بون':['Bon','Delivery note'],'امسح الرمز بهاتفك لعرض هذا البون وحفظه PDF':['Scannez le code avec votre téléphone pour voir ce bon et l\'enregistrer en PDF','Scan the code with your phone to view this delivery note and save it as PDF'],'⏳ جاري رفع البون...':['⏳ Envoi du bon...','⏳ Uploading the delivery note...'],'✔ الرمز يعمل: الزبون يستطيع فتح البون':['✔ Le code fonctionne : le client peut ouvrir le bon','✔ Code works: the customer can open the delivery note'],'⚠ لا يوجد اتصال. الرمز لن يعمل حتى ترفع البون.':['⚠ Pas de connexion. Le code ne marchera qu\'après l\'envoi du bon.','⚠ No connection. The code only works after the delivery note is uploaded.'],'بون التوصيل':['Bon de livraison','Delivery note'],'بون جديد':['Nouveau bon','New delivery note'],'+ بون جديد':['+ Nouveau bon','+ New delivery note'],'أوقفت هذا البون عند مبلغ:':['Arrêté le présent bon à la somme de :','This delivery note is for the amount of:'],'الناتج':['Résultat','Output'],'بون (بدون TVA)':['Bon (sans TVA)','Delivery note (no VAT)'],
 'حُوّل لفاتورة':['Converti en facture','Converted to invoice'],
 'مفتوح':['Ouvert','Open'],
 'عرض / PDF':['Voir / PDF','View / PDF'],
@@ -423,11 +424,13 @@ var invBusy={};
 function invUpload(d){if(d.up||invBusy[d.id])return;if(!INV_TOKEN){invMsg('الرمز غير مفعل بعد (الخدمة غير جاهزة)');return}
 invBusy[d.id]=1;invMsg('⏳ جاري رفع الفاتورة...');
 fetch(INV_ENDPOINT,{method:'POST',headers:{'content-type':'application/json','x-inv-token':INV_TOKEN},body:JSON.stringify({action:'put',id:d.sid,doc:invSnap(d)})}).then(function(r){if(r.ok||r.status===409){d.up=true;save();invMsg('✔ الرمز يعمل: الزبون يستطيع فتح الفاتورة')}else throw 0}).catch(function(){invMsg('⚠ لا يوجد اتصال. الرمز لن يعمل حتى ترفع الفاتورة.',true)}).then(function(){delete invBusy[d.id]})}
-function invMsg(t,retry){var e=document.getElementById('qst');if(e)e.innerHTML=esc(window.tr?tr(t):t)+(retry?' <button class="btn g s" onclick="invRetry()">'+(window.tr?tr('إعادة المحاولة'):'إعادة المحاولة')+'</button>':'')}
+function isBonView(){var d=S.docs.find(function(x){return x.id===view});return !!d&&d.type==='bon'}
+function bw(t){return isBonView()?t.replace('هذه الفاتورة','هذا البون').replace('الفاتورة','البون'):t}
+function invMsg(t,retry){t=bw(t);var e=document.getElementById('qst');if(e)e.innerHTML=esc(window.tr?tr(t):t)+(retry?' <button class="btn g s" onclick="invRetry()">'+(window.tr?tr('إعادة المحاولة'):'إعادة المحاولة')+'</button>':'')}
 function invRetry(){var d=S.docs.find(function(x){return x.id===view});if(d)invUpload(d)}
 function invAfter(){var b=document.getElementById('qrbox');if(!b||!view)return;var d=S.docs.find(function(x){return x.id===view});if(!d)return;
 if(!d.sid){d.sid=invSid();save()}
-var q=qrcode(0,'M');q.addData(INV_VIEW+d.sid);q.make();b.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true})+'<div>'+(window.tr?tr('امسح الرمز بهاتفك لعرض هذه الفاتورة وحفظها PDF'):'امسح الرمز بهاتفك لعرض هذه الفاتورة وحفظها PDF')+'<br><small dir="ltr">Scannez pour voir cette facture</small></div>';
+var q=qrcode(0,'M');q.addData(INV_VIEW+d.sid);q.make();b.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true})+'<div>'+(function(t){return window.tr?tr(t):t})(d.type==='bon'?'امسح الرمز بهاتفك لعرض هذا البون وحفظه PDF':'امسح الرمز بهاتفك لعرض هذه الفاتورة وحفظها PDF')+'<br><small dir="ltr">'+(d.type==='bon'?'Scannez pour voir ce bon':'Scannez pour voir cette facture')+'</small></div>';
 if(!document.getElementById('qst')){b.insertAdjacentHTML('beforebegin','<div class="qst noprint" id="qst"></div>')}
 if(d.up)invMsg('✔ الرمز يعمل: الزبون يستطيع فتح الفاتورة');else invUpload(d)}
 (function(){var o=window.render;window.render=function(){o();invAfter()}})();
