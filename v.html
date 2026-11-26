@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Secueasy</title>
+<style>
+:root{--red:#c8102e;--dark:#161616;--bg:#f5f5f5;--line:#e2e2e2}
+*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--dark)}
+header{background:var(--dark);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:4px solid var(--red)}
+header b{font-size:20px;color:#fff}header b span{color:var(--red)}
+nav{display:flex;gap:6px;overflow-x:auto;background:#fff;padding:8px;position:sticky;top:0;z-index:5;border-bottom:1px solid var(--line)}
+nav button{flex:1;min-width:90px;padding:10px;border:0;background:#eee;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
+nav button.on{background:var(--red);color:#fff}
+main{max-width:1000px;margin:0 auto;padding:14px}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px #0001}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:#fff;border-radius:12px;padding:14px;border-top:4px solid var(--red)}.kpi small{color:#666}.kpi div{font-size:22px;font-weight:700;margin-top:4px}
+h2{margin:0 0 10px;font-size:18px}
+input,select,textarea{width:100%;padding:9px;border:1px solid #ccc;border-radius:8px;font:inherit;background:#fff}
+label{font-size:13px;color:#555;display:block;margin:6px 0 2px}
+.btn{background:var(--red);color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn.k{background:var(--dark)}.btn.g{background:#eee;color:#111}.btn.s{padding:5px 9px;font-size:13px}
+table{width:100%;border-collapse:collapse}th{background:var(--dark);color:#fff;padding:8px;font-size:13px;text-align:right}
+td{padding:8px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+.tw{overflow-x:auto}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}.row>*{flex:1;min-width:130px}.row>.btn{flex:0 0 auto}
+.tag{padding:2px 8px;border-radius:99px;font-size:12px;background:#eee}.tag.r{background:#fde3e7;color:var(--red)}.tag.d{background:#222;color:#fff}
+.low{color:var(--red);font-weight:700}
+.sheet{background:#fff;max-width:760px;margin:0 auto;padding:28px;border:1px solid #ddd}
+.sheet .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--red);padding-bottom:10px}
+.sheet h1{white-space:nowrap;margin:0;color:var(--dark);font-size:28px}.sheet .nm{color:var(--red);font-size:26px;font-weight:800}
+.cbox{background:#fdeef0;border-right:4px solid var(--red);padding:10px;margin:14px 0;border-radius:6px}
+.sheet th{background:var(--red)}.tot{margin-right:auto;width:260px;margin-top:12px}.tot div{display:flex;justify-content:space-between;padding:5px 8px}
+.tot .t{background:var(--red);color:#fff;font-weight:800;font-size:18px;border-radius:6px}
+.sig{display:flex;justify-content:space-between;margin-top:40px;color:#555}
+.hide{display:none}
+
+body.p80 .sheet,body.p58 .sheet{margin:0 auto;padding:4px;font-size:12px;border:0}
+body.p80 .sheet{width:72mm;max-width:72mm}body.p58 .sheet{width:48mm;max-width:48mm;font-size:11px}
+body.p80 .sheet .top,body.p58 .sheet .top{display:block;text-align:center;padding-bottom:6px;border-bottom:2px dashed #000}
+body.p80 .sheet .top>div,body.p58 .sheet .top>div{text-align:center!important}
+body.p80 .sheet h1,body.p58 .sheet h1{font-size:16px}body.p80 .sheet .nm,body.p58 .sheet .nm{font-size:18px}
+body.p80 .cbox,body.p58 .cbox{margin:6px 0;padding:4px;background:#fff;border:0;border-bottom:1px dashed #000;border-radius:0}
+body.p80 .sheet th,body.p58 .sheet th{background:#fff;color:#000;border-bottom:1px solid #000;padding:2px;font-size:11px}
+body.p80 .sheet td,body.p58 .sheet td{padding:2px;font-size:11px}
+body.p80 .tot,body.p58 .tot{width:100%;margin:6px 0 0}body.p80 .tot .t,body.p58 .tot .t{background:#fff;color:#000;border:1px solid #000;border-radius:0}
+body.p80 .sig,body.p58 .sig{margin-top:14px;font-size:11px}
+body.p80 .sheet,body.p58 .sheet,body.p80 .sheet *,body.p58 .sheet *{color:#000}
+@media print{header,nav,.noprint{display:none!important}body{background:#fff}main{padding:0;max-width:none}.sheet{border:0;padding:0}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.sheet{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27300%27%20height%3D%27300%27%20viewBox%3D%270%200%20300%20300%27%20fill%3D%27none%27%20stroke%3D%27%23c8102e%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20opacity%3D%270.09%27%3E%0A%3Cg%20transform%3D%27translate%2825%2030%29%27%3E%3Crect%20x%3D%270%27%20y%3D%2710%27%20width%3D%2770%27%20height%3D%2728%27%20rx%3D%276%27/%3E%3Cpath%20d%3D%27M70%2018l22-9v34l-22-9%27/%3E%3Ccircle%20cx%3D%2720%27%20cy%3D%2724%27%20r%3D%277%27/%3E%3Cpath%20d%3D%27M30%2038v14M18%2052h24%27/%3E%3C/g%3E%0A%3Cg%20transform%3D%27translate%28160%20160%29%27%3E%3Crect%20x%3D%270%27%20y%3D%270%27%20width%3D%2780%27%20height%3D%2752%27%20rx%3D%275%27/%3E%3Cpath%20d%3D%27M40%2052v14M22%2070h36%27/%3E%3C/g%3E%0A%3Cg%20transform%3D%27translate%2830%20190%29%20rotate%28-8%29%27%3E%3Crect%20x%3D%270%27%20y%3D%270%27%20width%3D%2764%27%20height%3D%2742%27%20rx%3D%274%27/%3E%3Cpath%20d%3D%27M-8%2050h80l-6%20-8%27/%3E%3C/g%3E%0A%3Cg%20transform%3D%27translate%28170%2040%29%27%3E%3Ccircle%20cx%3D%2730%27%20cy%3D%2730%27%20r%3D%2722%27/%3E%3Ccircle%20cx%3D%2730%27%20cy%3D%2730%27%20r%3D%278%27/%3E%3Cpath%20d%3D%27M30%2052v14M14%2070h32%27/%3E%3C/g%3E%0A%3C/svg%3E");background-size:300px 300px;background-repeat:repeat}</style>
+<style>body{-webkit-user-select:text;user-select:text}.sheet{background-image:none}#msg{text-align:center;padding:30px;color:#555}</style></head><body>
+<header><b>Secue<span>asy</span></b></header><main id="app"><div id="msg">⏳ جاري التحميل...</div></main>
+<script>
+var INV_ENDPOINT='https://stkouxoctmmfshaumbec.supabase.co/functions/v1/inv';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>(Math.round(n*100)/100).toLocaleString('en-US',{maximumFractionDigits:2});
+const dfmt=d=>String(d).split('-').reverse().join('/');
+function words(n){n=Math.floor(n);if(n===0)return'صفر';
+const u=['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'];
+const t=['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
+const h=['','مائة','مائتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];
+function b(x){const p=[];const hh=Math.floor(x/100),r=x%100;if(hh)p.push(h[hh]);if(r){if(r<20)p.push(u[r]);else{const o=r%10,tt=Math.floor(r/10);p.push(o?u[o]+' و'+t[tt]:t[tt])}}return p.join(' و')}
+const parts=[];const m=Math.floor(n/1e6),k=Math.floor(n%1e6/1000),r=n%1000;
+if(m)parts.push(m===1?'مليون':m===2?'مليونان':b(m)+(m<=10?' ملايين':' مليون'));
+if(k)parts.push(k===1?'ألف':k===2?'ألفان':b(k)+(k<=10?' آلاف':' ألف'));
+if(r)parts.push(b(r));return parts.join(' و')}
+
+function show(d){const c=d.client||{};const ht=d.lines.reduce((a,l)=>a+l.qty*l.price,0),tva=ht*(d.tva/100),ttc=ht+tva;
+const nm=d.type==='devis'?'عرض ثمن':'فاتورة التوصيل',fr=d.type==='devis'?'DEVIS':'FACTURE';
+document.getElementById('app').innerHTML=`<div class="row noprint"><button class="btn" onclick="window.print()">حفظ PDF / طباعة</button></div>
+<div class="sheet"><div class="top"><div><div class="nm">Secueasy</div><small>Sécurité et solutions informatiques</small><div style="font-weight:700;margin-top:2px">الهاتف: <bdi dir="ltr">0666549952</bdi></div></div><div style="text-align:left"><h1>${nm}</h1><div dir="ltr" style="font-weight:700">${fr} N° ${esc(d.no)}</div><div style="white-space:nowrap">التاريخ: <bdi dir="ltr">${dfmt(d.date)}</bdi></div></div></div>
+<div class="cbox"><b>الزبون:</b> ${esc(c.name||'-')}<br>${esc(c.addr||'')} ${c.ice?' — ICE: '+esc(c.ice):''} ${c.phone?'<br>'+esc(c.phone):''}</div>
+<table><tr><th>البيان</th><th>العدد</th><th>ثمن الوحدة</th><th>المجموع</th></tr>${d.lines.map(l=>`<tr><td>${esc(l.name)}</td><td>${l.qty}</td><td>${fmt(l.price)}</td><td>${fmt(l.qty*l.price)}</td></tr>`).join('')}</table>
+<div class="tot"><div><span>المجموع HT</span><span>${fmt(ht)}</span></div><div><span>TVA ${d.tva}%</span><span>${fmt(tva)}</span></div><div class="t"><span>المجموع TTC</span><span>${fmt(ttc)} د.م</span></div></div>
+<p>أوقفت هذه ${d.type==='devis'?'العرض':'الفاتورة'} عند مبلغ: <b>${words(ttc)} درهماً</b></p>${d.note?`<p>${esc(d.note)}</p>`:''}
+<div class="sig"><span>الختم والتوقيع</span><span>${d.type==='devis'?'صالح 30 يوماً':''}</span></div></div>`}
+(function(){var id=(new URLSearchParams(location.search).get('i')||'').toLowerCase();var m=document.getElementById('msg');
+if(!/^[a-f0-9]{32}$/.test(id)){m.textContent='رابط غير صالح';return}
+fetch(INV_ENDPOINT,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'get',id:id})}).then(function(r){if(r.status===404)throw new Error('الفاتورة غير موجودة');if(!r.ok)throw new Error('تعذر تحميل الفاتورة، حاول مرة أخرى');return r.json()}).then(function(j){if(!j||!j.doc)throw new Error('الفاتورة غير موجودة');show(j.doc)}).catch(function(e){m.textContent=e.message||'تعذر تحميل الفاتورة'})})();
+</script></body></html>
