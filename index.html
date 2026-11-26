@@ -59,7 +59,7 @@ const fmt=n=>(Math.round(n*100)/100).toLocaleString('en-US',{maximumFractionDigi
 const today=()=>new Date().toISOString().slice(0,10);
 const dfmt=d=>d.split('-').reverse().join('/');
 let tab='home',view=null,draft=null,edit=null;
-const tabs=[['home','الملخص'],['products','المنتجات والمخزون'],['clients','الزبائن'],['docs','عروض الثمن والفواتير'],['backup','نسخة احتياطية']];
+const tabs=[['home','الملخص'],['products','المنتجات والمخزون'],['clients','الزبائن'],['docs','عروض الثمن والفواتير'],['recv','استلام سلعة'],['backup','نسخة احتياطية']];
 function totals(d){const ht=d.lines.reduce((a,l)=>a+l.qty*l.price,0);const tva=ht*(d.tva/100);return{ht,tva,ttc:ht+tva}}
 // number to Arabic words
 function words(n){n=Math.floor(n);if(n===0)return'صفر';
@@ -74,7 +74,7 @@ if(r)parts.push(b(r));return parts.join(' و')}
 function render(){
 $('#nav').innerHTML=tabs.map(([k,v])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${v}</button>`).join('');
 const a=$('#app');
-if(tab==='home')a.innerHTML=home();else if(tab==='products')a.innerHTML=products();else if(tab==='clients')a.innerHTML=clients();else if(tab==='docs')a.innerHTML=view?sheet(S.docs.find(d=>d.id===view)):draft?form():docs();else a.innerHTML=backup();
+if(tab==='home')a.innerHTML=home();else if(tab==='products')a.innerHTML=products();else if(tab==='clients')a.innerHTML=clients();else if(tab==='recv')a.innerHTML=recv();else if(tab==='docs')a.innerHTML=view?sheet(S.docs.find(d=>d.id===view)):draft?form():docs();else a.innerHTML=backup();
 }
 function go(t){tab=t;view=null;draft=null;edit=null;render();scrollTo(0,0)}
 function home(){
@@ -167,8 +167,77 @@ st.textContent=p==='a4'?'@page{size:A4;margin:12mm}':'@page{size:'+p+'mm 200mm;m
 function doPrint(){applyPaper();window.print()}
 applyPaper();
 </script><script>
+var BL_ENDPOINT='https://stkouxoctmmfshaumbec.supabase.co/functions/v1/bl',BL_TOKEN='bl_d26a1a6ccb66b4e3bb9bdfd174039bc4d0b369f9';
+var bl={items:null,busy:false,msg:'',sup:''};
+S.receipts=S.receipts||[];
+function blNorm(x){return String(x||'').toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g,' ').trim()}
+function blMatch(n){var a=blNorm(n);if(!a)return '';var best='',sc=0,aw=a.split(' ');S.products.forEach(function(p){var b=blNorm(p.name);if(!b)return;var s=0;if(a===b)s=100;else{var bw=b.split(' ');var c=aw.filter(function(w){return w.length>1&&bw.indexOf(w)>-1}).length;s=c/Math.max(aw.length,bw.length)*10}if(s>sc){sc=s;best=p.id}});return sc>=6?best:''}
+function recv(){
+var h='<div class="card"><h2>استلام سلعة من بون التوصيل</h2><small>صوّر بون مول السلعة، التطبيق يقرأ السلع والكميات، تراجع، ثم تُضاف للمخزون.</small>';
+h+='<div style="margin:10px 0"><input id="blf" type="file" accept="image/*" capture="environment" style="display:none" onchange="blRead(this)"><button class="btn k" style="width:100%" onclick="document.getElementById(\'blf\').click()">📷 صوّر البون</button></div>';
+h+='<small id="blm">'+esc(bl.msg)+'</small>';
+if(bl.items){
+h+='<div class="row" style="margin-top:8px"><div><label>المورد (اختياري)</label><input id="bls" value="'+esc(bl.sup)+'" oninput="bl.sup=this.value"></div></div>';
+h+=bl.items.map(function(it,i){return '<div class="card" style="margin:8px 0;padding:10px"><label>السلعة في البون</label><input value="'+esc(it.name)+'" oninput="bl.items['+i+'].name=this.value"><div class="row"><div><label>الكمية</label><input type="number" value="'+it.qty+'" oninput="bl.items['+i+'].qty=+this.value"></div><div><label>سعر الشراء</label><input type="number" value="'+(it.cost??'')+'" oninput="bl.items['+i+'].cost=this.value===\'\'?null:+this.value"></div></div><label>تُضاف إلى</label><select onchange="bl.items['+i+'].pid=this.value"><option value="">+ منتج جديد</option>'+S.products.map(function(p){return '<option value="'+p.id+'"'+(p.id===it.pid?' selected':'')+'>'+esc(p.name)+' ('+p.stock+')</option>'}).join('')+'</select><button class="btn g s" style="margin-top:8px" onclick="bl.items.splice('+i+',1);render()">حذف</button></div>'}).join('')||'<small>لا توجد سلع.</small>';
+h+='<div class="row" style="margin-top:8px"><button class="btn" onclick="blConfirm()">✔ تأكيد وإضافة للمخزون</button><button class="btn g" onclick="bl.items=null;bl.msg=\'\';render()">إلغاء</button></div>'}
+h+='</div>';
+var R=S.receipts.slice().reverse().slice(0,10);
+h+='<div class="card tw"><h2>آخر الاستلامات</h2><table><tr><th>التاريخ</th><th>المورد</th><th>عدد السلع</th></tr>'+(R.map(function(r){return '<tr><td>'+dfmt(r.date)+'</td><td>'+esc(r.sup||'-')+'</td><td>'+r.lines.length+'</td></tr>'}).join('')||'<tr><td colspan=3>لا توجد استلامات.</td></tr>')+'</table></div>';
+return h}
+function blShrink(file,cb){var im=new Image(),u=URL.createObjectURL(file);im.onload=function(){var m=1200,k=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);cb(c.toDataURL('image/jpeg',0.82).split(',')[1])};im.onerror=function(){cb(null)};im.src=u}
+function blRead(inp){var f=inp.files&&inp.files[0];if(!f)return;bl.msg='⏳ جاري قراءة البون...';render();
+blShrink(f,function(b64){if(!b64){bl.msg='تعذرت قراءة الصورة';render();return}
+if(!BL_ENDPOINT){bl.msg='خدمة القراءة غير مفعلة بعد';render();return}
+fetch(BL_ENDPOINT,{method:'POST',headers:{'content-type':'application/json','x-bl-token':BL_TOKEN},body:JSON.stringify({action:'bl',img:b64})}).then(function(r){if(r.ok)return r.json();var m={429:'بزاف د الطلبات، تسنى دقيقة وعاود',413:'الصورة كبيرة بزاف، صوّر من بعد شوية',503:'الذكاء الاصطناعي مشغول، عاود من بعد شوية',502:'ما قدرتش نقرا البون، صوّر بوضوح وعاود',403:'الخدمة غير متاحة'};throw new Error(m[r.status]||'')}).then(function(j){
+var it=(j&&j.items||[]).map(function(x){return {name:String(x.name||''),qty:+x.qty||0,cost:(x.cost==null||x.cost==='')?null:+x.cost,pid:''}}).filter(function(x){return x.name});
+if(!it.length){bl.msg='ما لقيت سلع فالصورة. صوّر البون بوضوح وبضوء جيد.';render();return}
+it.forEach(function(x){x.pid=blMatch(x.name)});bl.items=it;bl.sup=(j.supplier||'');bl.msg='راجع السلع والكميات قبل التأكيد.';render()
+}).catch(function(e){bl.msg=(e&&e.message)||'خطأ فالاتصال. حاول مرة أخرى.';render()})})}
+function blConfirm(){var L=bl.items.filter(function(x){return x.name.trim()&&x.qty>0});if(!L.length)return alert('لا توجد سلع صالحة');
+if(!confirm('إضافة '+L.length+' سلعة للمخزون؟'))return;
+var lines=[];L.forEach(function(x){var p=x.pid&&S.products.find(function(q){return q.id===x.pid});
+if(p){p.stock+=x.qty;if(x.cost!=null)p.cost=x.cost}else{p={id:uid(),name:x.name.trim(),price:0,cost:x.cost||0,stock:x.qty,min:2};S.products.push(p)}
+lines.push({pid:p.id,name:p.name,qty:x.qty,cost:x.cost})});
+S.receipts.push({id:uid(),date:today(),sup:bl.sup,lines:lines});save();bl={items:null,busy:false,msg:'✔ تمت الإضافة للمخزون ('+lines.length+' سلعة)',sup:''};render()}
+</script>
+<script>
 (function(){
 const D={
+'بزاف د الطلبات، تسنى دقيقة وعاود':['Trop de demandes, attendez une minute','Too many requests, wait a minute'],
+'الصورة كبيرة بزاف، صوّر من بعد شوية':['Image trop grande','Image too big'],
+'الذكاء الاصطناعي مشغول، عاود من بعد شوية':['IA occupée, réessayez dans un instant','AI busy, try again shortly'],
+'ما قدرتش نقرا البون، صوّر بوضوح وعاود':['Lecture impossible, photographiez plus net','Could not read, take a clearer photo'],
+'الخدمة غير متاحة':['Service indisponible','Service unavailable'],
+
+'استلام سلعة':['Réception','Receive goods'],
+'استلام سلعة من بون التوصيل':['Réception depuis le bon de livraison','Receive goods from delivery note'],
+'صوّر بون مول السلعة، التطبيق يقرأ السلع والكميات، تراجع، ثم تُضاف للمخزون.':['Photographiez le bon du fournisseur, l\'appli lit les articles et quantités, vous vérifiez, puis ils sont ajoutés au stock.','Photograph the supplier note, the app reads items and quantities, you review, then they are added to stock.'],
+'📷 صوّر البون':['📷 Photographier le bon','📷 Photograph the note'],
+'المورد (اختياري)':['Fournisseur (facultatif)','Supplier (optional)'],
+'السلعة في البون':['Article sur le bon','Item on note'],
+'الكمية':['Quantité','Quantity'],
+'سعر الشراء':['Prix d\'achat','Cost price'],
+'تُضاف إلى':['Ajouter à','Add to'],
+'+ منتج جديد':['+ Nouveau produit','+ New product'],
+'حذف':['Supprimer','Delete'],
+'لا توجد سلع.':['Aucun article.','No items.'],
+'✔ تأكيد وإضافة للمخزون':['✔ Confirmer et ajouter au stock','✔ Confirm and add to stock'],
+'إلغاء':['Annuler','Cancel'],
+'آخر الاستلامات':['Dernières réceptions','Recent receipts'],
+'عدد السلع':['Nb articles','Items'],
+'لا توجد استلامات.':['Aucune réception.','No receipts.'],
+'⏳ جاري قراءة البون...':['⏳ Lecture du bon...','⏳ Reading the note...'],
+'راجع السلع والكميات قبل التأكيد.':['Vérifiez les articles et quantités avant de confirmer.','Review items and quantities before confirming.'],
+'ما لقيت سلع فالصورة. صوّر البون بوضوح وبضوء جيد.':['Aucun article trouvé. Photographiez le bon bien net et bien éclairé.','No items found. Take a clear, well-lit photo.'],
+'خطأ فالاتصال. حاول مرة أخرى.':['Erreur de connexion. Réessayez.','Connection error. Try again.'],
+'خدمة القراءة غير مفعلة بعد':['Service de lecture pas encore activé','Reading service not enabled yet'],
+'تعذرت قراءة الصورة':['Image illisible','Could not read the image'],
+'✔ تمت الإضافة للمخزون':['✔ Ajouté au stock','✔ Added to stock'],
+'سلعة':['article(s)','item(s)'],
+'لا توجد سلع صالحة':['Aucun article valide','No valid items'],
+'إضافة':['Ajouter','Add'],
+'للمخزون؟':['au stock ?','to stock?'],
+
 '🎤 قل اسم المنتج وثمنه':['🎤 Dites le nom et le prix','🎤 Say the product name and price'],
 '🎤 أستمع... تكلم الآن':['🎤 J\'écoute... parlez','🎤 Listening... speak now'],
 'سمعت:':['J\'ai entendu :','Heard:'],
