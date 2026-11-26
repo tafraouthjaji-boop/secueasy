@@ -100,27 +100,33 @@ else if(k==='clients')S.clients=S.clients.filter(c=>!ids.has(c.id));
 else S.products=S.products.filter(p=>!ids.has(p.id));
 selP.clear();save();render()}
 
-function tkCanvas(d){var W=576,P=14,T=totals(d),c=S.clients.find(function(x){return x.id===d.client})||{};
+function tkCanvas(d){var W=576,P=8,K=1.45,T=totals(d),c=S.clients.find(function(x){return x.id===d.client})||{};
 var tt=function(x){return window.tr?tr(x):x},ar=(localStorage.getItem('sx_lang')||'ar')==='ar';
 function L(x){return '\u202A'+x+'\u202C'}
-function F(sz,b){return (b?'bold ':'')+sz+'px Tahoma,Arial,sans-serif'}
+function F(sz,b){return (b?'bold ':'')+Math.round(sz*K)+'px Tahoma,Arial,sans-serif'}
 function run(ctx,dry){var y=P;ctx.direction=ar?'rtl':'ltr';var X=ar?W-P:P;
-function wrap(s,font,mw){ctx.font=font;var w=String(s).split(/\s+/),L=[],cur='';w.forEach(function(t){var n=cur?cur+' '+t:t;if(ctx.measureText(n).width>mw&&cur){L.push(cur);cur=t}else cur=n});if(cur)L.push(cur);return L}
-function txt(s,sz,b,al){ctx.font=F(sz,b);var x=al==='c'?W/2:al==='s'?X:al==='e'?(ar?P:W-P):X;ctx.textAlign=al==='c'?'center':al==='e'?(ar?'left':'right'):(ar?'right':'left');if(!dry)ctx.fillText(s,x,y+sz)}
-function ln(dash){if(!dry){ctx.save();ctx.lineWidth=2;if(dash)ctx.setLineDash([6,5]);ctx.beginPath();ctx.moveTo(P,y);ctx.lineTo(W-P,y);ctx.stroke();ctx.restore()}y+=10}
-txt('Secueasy',44,1,'c');y+=52;txt('Sécurité et solutions informatiques',20,0,'c');y+=26;txt('Tel: 0666549952',22,1,'c');y+=32;ln(1);
+function adv(n){y+=n*K}
+function wrap(s,font,mw){ctx.font=font;var w=String(s).split(/\s+/),Q=[],cur='';w.forEach(function(t){var n=cur?cur+' '+t:t;if(ctx.measureText(n).width>mw&&cur){Q.push(cur);cur=t}else cur=n});if(cur)Q.push(cur);return Q}
+function txt(s,sz,b,al){ctx.font=F(sz,b);var x=al==='c'?W/2:al==='s'?X:al==='e'?(ar?P:W-P):X;ctx.textAlign=al==='c'?'center':al==='e'?(ar?'left':'right'):(ar?'right':'left');if(!dry)ctx.fillText(s,x,y+sz*K*0.85)}
+function ln(dash){if(!dry){ctx.save();ctx.lineWidth=3;if(dash)ctx.setLineDash([8,6]);ctx.beginPath();ctx.moveTo(P,y+4);ctx.lineTo(W-P,y+4);ctx.stroke();ctx.restore()}y+=12}
+txt('Secueasy',34,1,'c');adv(40);txt('Sécurité et solutions informatiques',15,0,'c');adv(19);txt('Tel: 0666549952',18,1,'c');adv(24);ln(1);
 var nm=d.type==='devis'?'عرض ثمن':d.type==='bon'?'بون التوصيل':'فاتورة التوصيل',fr=d.type==='devis'?'DEVIS':d.type==='bon'?'BON':'FACTURE';
-txt(tt(nm),30,1,'c');y+=38;txt(fr+' N° '+d.no,24,1,'c');y+=30;txt(dfmt(d.date),22,0,'c');y+=30;
-if(c.name){txt(tt('الزبون:')+' '+c.name,22,1,'s');y+=30}ln(1);
-d.lines.forEach(function(l){wrap(l.name,F(22,0),W-2*P).forEach(function(t){txt(t,22,0,'s');y+=27});
-txt(L(l.qty+' x '+fmt(l.price)),22,0,'s');txt(L(fmt(l.qty*l.price)),24,1,'e');y+=32;ln(1)});
-y+=4;if(d.type!=='bon'){txt('HT',24,0,'s');txt(L(fmt(T.ht)),24,0,'e');y+=30;txt(L('TVA '+d.tva+'%'),24,0,'s');txt(L(fmt(T.tva)),24,0,'e');y+=30}
-txt(d.type==='bon'?tt('المجموع'):'TTC',32,1,'s');txt(L(fmt(T.ttc)+' DH'),32,1,'e');y+=44;ln(0);
-if(d.sid&&window.qrcode){var q=qrcode(0,'M');q.addData(INV_VIEW+d.sid);q.make();var n=q.getModuleCount(),cs=Math.max(2,Math.floor(220/n)),sz=cs*n,ox=(W-sz)/2;y+=8;if(!dry){for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))ctx.fillRect(ox+k*cs,y+r*cs,cs,cs)}y+=sz+10}
-txt('Merci',24,1,'c');y+=60;return y}
+txt(tt(nm),24,1,'c');adv(30);txt(fr+' N° '+d.no,22,1,'c');adv(27);txt(dfmt(d.date),18,0,'c');adv(24);
+if(c.name){txt(tt('الزبون:')+' '+c.name,20,1,'s');adv(26)}ln(1);
+d.lines.forEach(function(l){wrap(l.name,F(20,1),W-2*P).forEach(function(t){txt(t,20,1,'s');adv(25)});
+txt(L(l.qty+' x '+fmt(l.price)),20,0,'s');txt(L(fmt(l.qty*l.price)),22,1,'e');adv(28);ln(1)});
+adv(4);if(d.type!=='bon'){txt('HT',20,0,'s');txt(L(fmt(T.ht)),20,0,'e');adv(26);txt(L('TVA '+d.tva+'%'),20,0,'s');txt(L(fmt(T.tva)),20,0,'e');adv(26)}
+txt(d.type==='bon'?tt('المجموع'):'TTC',28,1,'s');txt(L(fmt(T.ttc)+' DH'),28,1,'e');adv(38);ln(0);
+if(d.sid&&window.qrcode){var q=qrcode(0,'M');q.addData(INV_VIEW+d.sid);q.make();var n=q.getModuleCount(),cs=Math.max(3,Math.floor(400/n)),sz=cs*n,ox=Math.round((W-sz)/2);y+=10;if(!dry){for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))ctx.fillRect(ox+k*cs,y+r*cs,cs,cs)}y+=sz+12}
+txt('Merci',22,1,'c');adv(40);return Math.ceil(y)}
 var t=document.createElement('canvas').getContext('2d');var H=run(t,true);var cv=document.createElement('canvas');cv.width=W;cv.height=H;var x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#000';x.strokeStyle='#000';run(x,false);return cv}
+function tkEscpos(cv){var W=cv.width,H=cv.height,bw=W/8,id=cv.getContext('2d').getImageData(0,0,W,H).data,out=[0x1b,0x40],BH=128;
+for(var y0=0;y0<H;y0+=BH){var h=Math.min(BH,H-y0);out.push(0x1d,0x76,0x30,0,bw&255,bw>>8,h&255,h>>8);
+for(var y=y0;y<y0+h;y++)for(var xb=0;xb<bw;xb++){var v=0;for(var b=0;b<8;b++){var i=(y*W+xb*8+b)*4;if(id[i]*0.3+id[i+1]*0.59+id[i+2]*0.11<170)v|=0x80>>b}out.push(v)}}
+out.push(0x1b,0x64,4,0x1d,0x56,0x42,0x03);return new Uint8Array(out)}
+function tkB64(u){var s='';for(var i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)}
 function tkOpen(){var d=S.docs.find(function(x){return x.id===view});if(!d)return;var cv=tkCanvas(d);window.__tk=cv.toDataURL('image/png');var o=document.createElement('div');o.id='tko';o.style.cssText='position:fixed;inset:0;z-index:99;background:#eee;overflow:auto;padding:12px;text-align:center';var T=function(x){return window.tr?tr(x):x};o.innerHTML='<div style="margin-bottom:10px"><button class="btn" onclick="tkSend()">'+T('🖨️ طباعة على Epson')+'</button> <button class="btn g" onclick="document.getElementById(\'tko\').remove()">'+T('إغلاق')+'</button></div><div style="font-size:13px;color:#555;margin-bottom:8px">'+T('يتطلب تطبيق RawBT (مجاني) مثبتاً ومربوطاً بالطابعة')+'</div><img src="'+window.__tk+'" style="width:288px;max-width:100%;background:#fff;box-shadow:0 1px 6px #0003">';document.body.appendChild(o)}
-function tkSend(){location.href='rawbt:data:image/png;base64,'+window.__tk.split(',')[1]}
+function tkSend(){var d=S.docs.find(function(x){return x.id===view});if(!d)return;window.__tkb=tkB64(tkEscpos(tkCanvas(d)));location.href='rawbt:base64,'+window.__tkb}
 function go(t){selP.clear();tab=t;view=null;draft=null;edit=null;render();scrollTo(0,0)}
 function home(){
 const inv=S.docs.filter(d=>d.type==='facture');const paid=inv.filter(d=>d.paid);
