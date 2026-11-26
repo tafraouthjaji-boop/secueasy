@@ -61,14 +61,14 @@ if(m)parts.push(m===1?'مليون':m===2?'مليونان':b(m)+(m<=10?' ملاي
 if(k)parts.push(k===1?'ألف':k===2?'ألفان':b(k)+(k<=10?' آلاف':' ألف'));
 if(r)parts.push(b(r));return parts.join(' و')}
 
-function show(d){const c=d.client||{};const ht=d.lines.reduce((a,l)=>a+l.qty*l.price,0),tva=ht*(d.tva/100),ttc=ht+tva;
-const nm=d.type==='devis'?'عرض ثمن':'فاتورة التوصيل',fr=d.type==='devis'?'DEVIS':'FACTURE';
+function show(d){if(typeof d.note==='string'&&d.note.indexOf('@@BON@@')===0){d.type='bon';d.note=d.note.slice(7)}const c=d.client||{};const ht=d.lines.reduce((a,l)=>a+l.qty*l.price,0),tva=d.type==='bon'?0:ht*(d.tva/100),ttc=ht+tva;
+const nm=d.type==='devis'?'عرض ثمن':d.type==='bon'?'بون التوصيل':'فاتورة التوصيل',fr=d.type==='devis'?'DEVIS':d.type==='bon'?'BON':'FACTURE';
 document.getElementById('app').innerHTML=`<div class="row noprint"><button class="btn" onclick="window.print()">حفظ PDF / طباعة</button></div>
 <div class="sheet"><div class="top"><div><div class="nm">Secueasy</div><small>Sécurité et solutions informatiques</small><div style="font-weight:700;margin-top:2px">الهاتف: <bdi dir="ltr">0666549952</bdi></div></div><div style="text-align:left"><h1>${nm}</h1><div dir="ltr" style="font-weight:700">${fr} N° ${esc(d.no)}</div><div style="white-space:nowrap">التاريخ: <bdi dir="ltr">${dfmt(d.date)}</bdi></div></div></div>
 <div class="cbox"><b>الزبون:</b> ${esc(c.name||'-')}<br>${esc(c.addr||'')} ${c.ice?' — ICE: '+esc(c.ice):''} ${c.phone?'<br>'+esc(c.phone):''}</div>
 <table><tr><th>البيان</th><th>العدد</th><th>ثمن الوحدة</th><th>المجموع</th></tr>${d.lines.map(l=>`<tr><td>${esc(l.name)}</td><td>${l.qty}</td><td>${fmt(l.price)}</td><td>${fmt(l.qty*l.price)}</td></tr>`).join('')}</table>
-<div class="tot"><div><span>المجموع HT</span><span>${fmt(ht)}</span></div><div><span>TVA ${d.tva}%</span><span>${fmt(tva)}</span></div><div class="t"><span>المجموع TTC</span><span>${fmt(ttc)} د.م</span></div></div>
-<p>أوقفت هذه ${d.type==='devis'?'العرض':'الفاتورة'} عند مبلغ: <b>${words(ttc)} درهماً</b></p>${d.note?`<p>${esc(d.note)}</p>`:''}
+<div class="tot">${d.type==='bon'?'':`<div><span>المجموع HT</span><span>${fmt(ht)}</span></div><div><span>TVA ${d.tva}%</span><span>${fmt(tva)}</span></div>`}<div class="t"><span>${d.type==='bon'?'المجموع':'المجموع TTC'}</span><span>${fmt(ttc)} د.م</span></div></div>
+<p>${d.type==='bon'?'أوقفت هذا البون':'أوقفت هذه '+(d.type==='devis'?'العرض':'الفاتورة')} عند مبلغ: <b>${words(ttc)} درهماً</b></p>${d.note?`<p>${esc(d.note)}</p>`:''}
 <div class="sig"><span>الختم والتوقيع</span><span>${d.type==='devis'?'صالح 30 يوماً':''}</span></div></div>`}
 (function(){var id=(new URLSearchParams(location.search).get('i')||'').toLowerCase();var m=document.getElementById('msg');
 if(!/^[a-f0-9]{32}$/.test(id)){m.textContent='رابط غير صالح';return}
