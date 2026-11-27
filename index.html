@@ -60,7 +60,8 @@ nav{justify-content:center;gap:8px;padding:10px 28px}nav button{flex:0 1 150px;m
 .sheet{max-width:900px}
 #tko img{width:420px!important}
 .dl td:nth-child(4){align-self:center}
-}</style><style>.addrow{display:none}@media screen and (min-width:900px){.addrow{display:block;margin:6px 0 10px}.addrow .btn{padding:11px 22px;font-size:15px}.fab{display:none}}</style></head><body>
+}</style><style>.addrow{display:none}@media screen and (min-width:900px){.addrow{display:block;margin:6px 0 10px}.addrow .btn{padding:11px 22px;font-size:15px}.fab{display:none}}</style><style>.tkpr{display:none}@media screen and (min-width:900px) and (not (pointer:coarse)){.tkraw{display:none!important}.tkpr{display:inline-block}div.tkpr{display:block}}
+@media print{body.tkp>*:not(#tko){display:none!important}body.tkp #tko{position:static!important;background:#fff!important;padding:0!important;overflow:visible!important;display:block!important}body.tkp #tko>*{display:none!important}body.tkp #tko>img{display:block!important;width:72mm!important;max-width:none!important;margin:0 auto!important;box-shadow:none!important}html,body.tkp{background:#fff!important}@page{size:80mm auto;margin:0}}</style></head><body>
 <header><b>Secue<span>asy</span></b><span>تسيير المحل</span></header>
 <nav id="nav"></nav><main id="app"></main>
 <script>
@@ -140,7 +141,8 @@ for(var y0=0;y0<H;y0+=BH){var h=Math.min(BH,H-y0);out.push(0x1d,0x76,0x30,0,bw&2
 for(var y=y0;y<y0+h;y++)for(var xb=0;xb<bw;xb++){var v=0;for(var b=0;b<8;b++){var i=(y*W+xb*8+b)*4;if(id[i]*0.3+id[i+1]*0.59+id[i+2]*0.11<170)v|=0x80>>b}out.push(v)}}
 out.push(0x1b,0x64,4,0x1d,0x56,0x42,0x03);return new Uint8Array(out)}
 function tkB64(u){var s='';for(var i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)}
-function tkOpen(){var d=S.docs.find(function(x){return x.id===view});if(!d)return;var cv=tkCanvas(d);window.__tk=cv.toDataURL('image/png');var o=document.createElement('div');o.id='tko';o.style.cssText='position:fixed;inset:0;z-index:99;background:#eee;overflow:auto;padding:12px;text-align:center';var T=function(x){return window.tr?tr(x):x};o.innerHTML='<div style="margin-bottom:10px"><button class="btn" onclick="tkSend()">'+T('🖨️ طباعة على Epson')+'</button> <button class="btn g" onclick="document.getElementById(\'tko\').remove()">'+T('إغلاق')+'</button></div><div style="font-size:13px;color:#555;margin-bottom:8px">'+T('يتطلب تطبيق RawBT (مجاني) مثبتاً ومربوطاً بالطابعة')+'</div><div style="font-size:12px;color:#999;margin-bottom:6px">v tk17</div><img src="'+window.__tk+'" style="width:288px;max-width:100%;background:#fff;box-shadow:0 1px 6px #0003">';document.body.appendChild(o)}
+function tkOpen(){var d=S.docs.find(function(x){return x.id===view});if(!d)return;var cv=tkCanvas(d);window.__tk=cv.toDataURL('image/png');var o=document.createElement('div');o.id='tko';o.style.cssText='position:fixed;inset:0;z-index:99;background:#eee;overflow:auto;padding:12px;text-align:center';var T=function(x){return window.tr?tr(x):x};o.innerHTML='<div style="margin-bottom:10px"><button class="btn tkraw" onclick="tkSend()">'+T('🖨️ طباعة على Epson')+'</button><button class="btn tkpr" onclick="tkPrint()">'+T('🖨️ طباعة')+'</button> <button class="btn g" onclick="document.getElementById(\'tko\').remove()">'+T('إغلاق')+'</button></div><div class="tkraw" style="font-size:13px;color:#555;margin-bottom:8px">'+T('يتطلب تطبيق RawBT (مجاني) مثبتاً ومربوطاً بالطابعة')+'</div><div class="tkpr" style="font-size:13px;color:#555;margin-bottom:8px">'+T('اختر طابعة Epson في نافذة الطباعة')+'</div><div style="font-size:12px;color:#999;margin-bottom:6px">v tk18</div><img src="'+window.__tk+'" style="width:288px;max-width:100%;background:#fff;box-shadow:0 1px 6px #0003">';document.body.appendChild(o)}
+function tkPrint(){document.body.classList.add('tkp');var r=function(){document.body.classList.remove('tkp');window.removeEventListener('afterprint',r)};window.addEventListener('afterprint',r);window.print()}
 function tkSend(){var d=S.docs.find(function(x){return x.id===view});if(!d)return;window.__tkb=tkB64(tkEscpos(tkCanvas(d)));location.href='rawbt:base64,'+window.__tkb}
 function go(t){selP.clear();tab=t;view=null;draft=null;edit=null;render();scrollTo(0,0)}
 function home(){
@@ -276,6 +278,7 @@ S.receipts.push({id:uid(),date:today(),sup:bl.sup,lines:lines});save();bl={items
 <script>
 (function(){
 const D={
+'🖨️ طباعة':['🖨️ Imprimer','🖨️ Print'],'اختر طابعة Epson في نافذة الطباعة':['Choisissez l\'imprimante Epson dans la fenêtre d\'impression','Choose the Epson printer in the print window'],
 '+ إضافة سطر':['+ Ajouter une ligne','+ Add a line'],
 '+ سطر حر (اكتب أي سلعة)':['+ Ligne libre (écrire n\'importe quel article)','+ Free line (type any item)'],'أو أضف من المنتجات المسجلة':['Ou ajouter depuis les produits enregistrés','Or add from saved products'],
 '-- منتج --':['-- Produit --','-- Product --'],
